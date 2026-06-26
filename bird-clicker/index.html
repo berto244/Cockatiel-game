@@ -1,14 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Cockatiel Clicker</title>
-<style>body{text-align:center;background:#000;color:#0f0;font-family:sans-serif;}#bird{width:200px;height:200px;cursor:pointer;}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cockatiel Empire</title>
+    <style>
+        body { font-family: 'Press Start 2P', system-ui; background: linear-gradient(#112, #000); color: #ff0; text-align: center; margin: 0; padding: 20px; }
+        #bird { width: 220px; height: 220px; cursor: pointer; border: 5px solid #ff0; border-radius: 50%; box-shadow: 0 0 20px #0f0; transition: all 0.1s; }
+        #bird:active { transform: scale(0.85) rotate(10deg); }
+        .upgrade { margin: 10px auto; padding: 15px; background: #222; border: 3px solid #ff0; width: 80%; max-width: 500px; cursor: pointer; font-size: 1.1em; }
+        .upgrade:hover { background: #440; }
+        #stats { font-size: 1.3em; margin: 15px; }
+        #message { font-size: 1.4em; color: #0f0; min-height: 40px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-<h1>🐦 Click the Bird!</h1>
-<div>Seeds: <span id="s">0</span></div>
-<img id="bird" src="https://picsum.photos/id/1015/200/200">
-<div id="msg"></div>
-<script src="game.js"></script>
+    <h1>🐦 COCKATIEL EMPIRE</h1>
+    <div id="stats">Seeds: <span id="seeds">0</span> | Level: <span id="level">1</span></div>
+    <img id="bird" src="https://picsum.photos/id/1015/220/220" alt="Click the Bird!">
+    <div id="message"></div>
+    <h2>UPGRADES</h2>
+    <div class="upgrade" id="u1">Better Perch (50) - +2 Power</div>
+    <div class="upgrade" id="u2">Toy Swarm (250) - +8/sec</div>
+    <div class="upgrade" id="u3">Lightning Nest (1200) - x3</div>
+    <div class="upgrade" id="u4">Royal Crown (5000) - Prestige</div>
+    <div class="upgrade" onclick="buyPremium()">💎 Premium $4.99 - Double Rewards</div>
+    <p>Built by Set and True Services LLC</p>
+    <script src="game.js"></script>
 </body>
 </html>
