@@ -3,37 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bird Clicker - Cockatiel Empire by Set and True</title>
+    <title>Cockatiel Empire</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        body { font-family: 'Press Start 2P', cursive; text-align: center; background: linear-gradient(#0a0, #220); color: #ff0; margin: 0; padding: 20px; overflow-x: hidden; }
-        #game { max-width: 640px; margin: 0 auto; border: 4px solid #ff0; background: #111; padding: 20px; box-shadow: 0 0 30px #ff0; }
-        #bird { width: 220px; height: 220px; cursor: pointer; image-rendering: pixelated; transition: transform 0.05s; border: 4px solid #ff0; border-radius: 50%; }
-        #bird:active { transform: scale(0.85) rotate(10deg); }
-        .upgrade { margin: 12px auto; padding: 15px; background: #222; border: 3px solid #ff0; cursor: pointer; width: 80%; transition: all 0.2s; }
-        .upgrade:hover { background: #440; transform: scale(1.05); }
-        #stats { font-size: 1.1em; margin: 15px; background: #000; padding: 10px; border: 2px solid #ff0; }
-        #message { min-height: 30px; font-size: 1.3em; color: #0f0; text-shadow: 0 0 10px #0f0; }
-        button { background: #ff0; color: #000; border: none; padding: 10px 20px; font-family: inherit; cursor: pointer; margin: 10px; }
-        .premium { background: linear-gradient(#ff0, #f80); color: #000; font-weight: bold; padding: 15px; margin: 15px; border: 4px solid #0f0; cursor: pointer; }
+        body { font-family: Arial; text-align: center; background: #111; color: #ff0; }
+        #game { max-width: 600px; margin: 0 auto; }
+        #bird { width: 200px; height: 200px; cursor: pointer; }
+        .upgrade { margin: 10px; padding: 10px; background: #222; border: 2px solid #ff0; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h1 style="text-shadow: 0 0 10px #ff0;">🐦 COCKATIEL EMPIRE</h1>
+    <h1>🐦 Cockatiel Empire</h1>
     <div id="game">
-        <div id="stats">SEEDS: <span id="seeds">0</span> | CPS: <span id="cps">0</span> | LEVEL: <span id="level">1</span></div>
-        <img id="bird" src="https://picsum.photos/id/1015/220/220" alt="Click the Bird!">
+        <div>Seeds: <span id="seeds">0</span> | Level: <span id="level">1</span></div>
+        <img id="bird" src="https://picsum.photos/id/1015/200/200" alt="bird">
         <div id="message"></div>
-        <h2 style="color:#0f0;">UPGRADES</h2>
-        <div class="upgrade" id="upgrade1">🐦 Better Perch (50) — +2 Click Power</div>
-        <div class="upgrade" id="upgrade2">🎾 Toy Swarm (250) — +8 CPS</div>
-        <div class="upgrade" id="upgrade3">⚡ Lightning Nest (1200) — x3 Multiplier</div>
-        <div class="upgrade" id="upgrade4">👑 Royal Crown (5000) — Unlock Prestige</div>
-        <div onclick="buyPremium()" class="premium">💎 GO PREMIUM - $4.99 (No Ads + Exclusive Skins)</div>
+        <h2>Upgrades</h2>
+        <div class="upgrade" id="upgrade1">Better Perch (50)</div>
+        <div class="upgrade" id="upgrade2">Toy Swarm (250)</div>
+        <div class="upgrade" id="upgrade3">Lightning Nest (1200)</div>
+        <div class="upgrade" id="upgrade4">Royal Crown (5000)</div>
+        <div class="upgrade" onclick="buyPremium()">💎 Premium $4.99</div>
     </div>
-    <p>Built by <strong>Set and True Services LLC</strong> • Orlando, FL • (321) 387-8613<br>
-    <a href="https://setandtrue.com" style="color:#0ff;">Professional Services & Websites</a> | 
-    <button onclick="resetGame()">Reset Progress</button></p>
     <script src="game.js"></script>
 </body>
 </html>
