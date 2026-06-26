@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Cockatiel Empire - Playable Game</title>
+<style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  background: #050814;
+  color: white;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  touch-action: none;
+}
+
+#gameWrap {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: linear-gradient(#122a4a, #06101d 65%, #2b1907 65%);
+}
+
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, #294b7a, #050814 65%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  text-align: center;
+  z-index: 10;
+}
+
+.card {
+  max-width: 540px;
+  background: rgba(0,0,0,.78);
+  border: 4px solid #ffe600;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 0 30px rgba(255,230,0,.35);
+}
+
+h1 {
+  font-size: 42px;
+  margin: 0 0 10px;
+  color: #ffe600;
+  text-shadow: 3px 3px #000;
+}
+
+p {
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 15px 22px;
+  margin: 8px;
+  background: #ffe600;
+  color: #111;
+  font-weight: 900;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #25344f;
+  color: white;
+  border: 2px solid #6e8dc6;
+}
+
+#hud {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.box {
+  background: rgba(0,0,0,.65);
+  border: 2px solid #ffe600;
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+}
+
+#controls {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 18px;
+  pointer-events: none;
+}
+
+.pad, .actions {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.controlBtn {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(255,230,0,.85);
+  border: 3px solid white;
+  font-size: 28px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.actionBtn {
+  width: 82px;
+  height: 68px;
+  border-radius: 16px;
+  background: rgba(0,255,125,.85);
+  border: 3px solid white;
+  color: #001b0b;
+  font-size: 18px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+#message {
+  position: absolute;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.75);
+  color: #00ff7d;
+  border: 2px solid #00ff7d;
+  border-radius: 12px;
+  padding: 10px 16px;
+  z-index: 7;
+  font-weight: bold;
+  display: none;
+  text-align: center;
+  max-width: 90vw;
+}
+
+#shopPanel {
+  position: absolute;
+  right: 10px;
+  top: 92px;
+  width: min(360px, calc(100vw - 20px));
+  background: rgba(0,0,0,.88);
+  border: 3px solid #ffe600;
+  border-radius: 16px;
+  padding: 12px;
+  z-index: 8;
+  display: none;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.shopItem {
+  border: 2px solid #555;
+  border-radius: 12px;
+  padding: 10px;
+  margin: 8px 0;
+  background: #101827;
+}
+
+.shopItem h3 {
+  margin: 0 0 5px;
+  color: #ffe600;
+}
+
+.shopItem p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.shopItem button {
+  width: 100%;
+  font-size: 15px;
+  padding: 10px;
+  margin: 6px 0 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 32px; }
+  p { font-size: 16px; }
+  #hud { grid-template-columns: 1fr 1fr; }
+  .box { font-size: 13px; padding: 7px; }
+  .controlBtn { width: 58px; height: 58px; font-size: 24px; }
+  .actionBtn { width: 70px; height: 58px; font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gameWrap">
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div class="box">Seeds: <span id="seeds">0</span></div>
+    <div class="box">Health: <span id="health">100</span></div>
+    <div class="box">Level: <span id="level">1</span></div>
+    <div class="box">Babies: <span id="babies">0</span></div>
+    <div class="box">Sword: <span id="sword">1</span></div>
+    <div class="box">Goal: <span id="goal">Collect Seeds</span></div>
+  </div>
+
+  <div id="message"></div>
+
+  <div id="shopPanel">
+    <h2 style="margin:4px 0;color:#ffe600;">🛒 Aviary Shop</h2>
+    <div class="shopItem">
+      <h3>⚔️ Stronger Beak Sword</h3>
+      <p>More attack damage.</p>
+      <p>Cost: <span id="costSword">30</span> seeds</p>
+      <button onclick="buy('sword')">BUY</button>
+    </div>
+    <div class="shopItem">
+      <h3>❤️ Health Treat</h3>
+      <p>Restore health.</p>
+      <p>Cost: <span id="costHealth">25</span> seeds</p>
+      <button onclick="buy('health')">BUY</button>
+    </div>
+    <div class="shopItem">
+      <h3>🐣 Hatch Baby</h3>
+      <p>Baby birds help fight squirrels.</p>
+      <p>Cost: <span id="costBaby">50</span> seeds</p>
+      <button onclick="buy('baby')">BUY</button>
+    </div>
+    <div class="shopItem">
+      <h3>🏰 Upgrade Nest</h3>
+      <p>Level up your empire.</p>
+      <p>Cost: <span id="costNest">100</span> seeds</p>
+      <button onclick="buy('nest')">BUY</button>
+    </div>
+    <button class="secondary" onclick="toggleShop()">Close Shop</button>
+  </div>
+
+  <div id="controls">
+    <div class="pad">
+      <div class="controlBtn" id="leftBtn">←</div>
+      <div class="controlBtn" id="rightBtn">→</div>
+    </div>
+    <div class="actions">
+      <div class="actionBtn" id="jumpBtn">JUMP</div>
+      <div class="actionBtn" id="attackBtn">HIT</div>
+      <div class="actionBtn" id="shopBtn">SHOP</div>
+    </div>
+  </div>
+
+  <div id="startScreen" class="screen">
+    <div class="card">
+      <h1>🐦 COCKATIEL EMPIRE</h1>
+      <p>
+        A real playable bird game. Run, jump, collect seeds, fight squirrels,
+        hatch baby birds, upgrade your nest, and defeat the raccoon boss.
+      </p>
+      <p><b>Controls:</b><br>
+        Phone: use the buttons.<br>
+        Computer: A/D or arrows, Space to jump, F to hit, S for shop.
+      </p>
+      <button onclick="startGame()">PLAY GAME</button>
+      <button class="secondary" onclick="resetSave()">Reset Save</button>
+    </div>
+  </div>
+
+  <div id="gameOverScreen" class="screen hidden">
+    <div class="card">
+      <h1 id="endTitle">GAME OVER</h1>
+      <p id="endText">Your cockatiel got tired.</p>
+      <button onclick="restartLevel()">Try Again</button>
+      <button class="secondary" onclick="resetSave()">New Game</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let W = 0, H = 0, groundY = 0;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  groundY = H * 0.68;
+}
+window.addEventListener("resize", resize);
+resize();
+
+const keys = {};
+let running = false;
+let shopOpen = false;
+let lastTime = 0;
+
+const saveKey = "cockatielEmpireRealGameSave";
+
+let state = {
+  seeds: 0,
+  health: 100,
+  maxHealth: 100,
+  level: 1,
+  babies: 0,
+  sword: 1,
+  bossDefeated: false,
+  swordCost: 30,
+  healthCost: 25,
+  babyCost: 50,
+  nestCost: 100
+};
+
+let player, seeds, enemies, babies, boss, particles;
+
+function newLevel() {
+  player = {
+    x: 90,
+    y: groundY - 60,
+    w: 52,
+    h: 52,
+    vx: 0,
+    vy: 0,
+    onGround: true,
+    facing: 1,
+    attackTimer: 0,
+    invincible: 0
+  };
+
+  seeds = [];
+  enemies = [];
+  babies = [];
+  particles = [];
+
+  for (let i = 0; i < 16 + state.level * 3; i++) {
+    seeds.push({
+      x: 180 + Math.random() * (W - 260),
+      y: 130 + Math.random() * (groundY - 210),
+      r: 10,
+      got: false
+    });
+  }
+
+  for (let i = 0; i < 3 + state.level; i++) {
+    enemies.push({
+      x: 260 + Math.random() * (W - 330),
+      y: groundY - 44,
+      w: 48,
+      h: 42,
+      vx: Math.random() < 0.5 ? -1.2 : 1.2,
+      hp: 2 + Math.floor(state.level / 2),
+      alive: true
+    });
+  }
+
+  for (let i = 0; i < state.babies; i++) {
+    babies.push({
+      x: player.x - 40 - i * 15,
+      y: player.y - 35,
+      a: Math.random() * 10
+    });
+  }
+
+  boss = null;
+  if (state.level >= 5 && !state.bossDefeated) {
+    boss = {
+      x: W - 160,
+      y: groundY - 88,
+      w: 90,
+      h: 88,
+      hp: 30,
+      maxHp: 30,
+      vx: -0.8,
+      alive: true
+    };
+    document.getElementById("goal").textContent = "Beat Boss";
+  } else {
+    document.getElementById("goal").textContent = "Collect Seeds";
+  }
+
+  updateHud();
+}
+
+function startGame() {
+  load();
+  document.getElementById("startScreen").classList.add("hidden");
+  document.getElementById("gameOverScreen").classList.add("hidden");
+  running = true;
+  newLevel();
+  requestAnimationFrame(loop);
+  showMessage("Build the Cockatiel Empire!");
+}
+
+function restartLevel() {
+  state.health = state.maxHealth;
+  document.getElementById("gameOverScreen").classList.add("hidden");
+  running = true;
+  newLevel();
+  requestAnimationFrame(loop);
+}
+
+function gameOver(win) {
+  running = false;
+  save();
+  const screen = document.getElementById("gameOverScreen");
+  document.getElementById("endTitle").textContent = win ? "YOU WON! 🏆" : "GAME OVER";
+  document.getElementById("endText").textContent = win
+    ? "Your Cockatiel Empire defeated the raccoon boss!"
+    : "Your cockatiel got tired. Upgrade and try again.";
+  screen.classList.remove("hidden");
+}
+
+function loop(t) {
+  if (!running) return;
+  const dt = Math.min(32, t - lastTime || 16) / 16.67;
+  lastTime = t;
+
+  update(dt);
+  draw();
+
+  requestAnimationFrame(loop);
+}
+
+function update(dt) {
+  if (shopOpen) {
+    draw();
+    return;
+  }
+
+  const left = keys.ArrowLeft || keys.a || keys.A || keys.left;
+  const right = keys.ArrowRight || keys.d || keys.D || keys.right;
+
+  player.vx = 0;
+  if (left) {
+    player.vx = -4.4;
+    player.facing = -1;
+  }
+  if (right) {
+    player.vx = 4.4;
+    player.facing = 1;
+  }
+
+  player.x += player.vx * dt;
+  player.vy += 0.65 * dt;
+  player.y += player.vy * dt;
+
+  if (player.y + player.h >= groundY) {
+    player.y = groundY - player.h;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  player.x = Math.max(8, Math.min(W - player.w - 8, player.x));
+
+  if (player.attackTimer > 0) player.attackTimer -= dt;
+  if (player.invincible > 0) player.invincible -= dt;
+
+  seeds.forEach(s => {
+    if (!s.got && dist(player.x + 26, player.y + 26, s.x, s.y) < 38) {
+      s.got = true;
+      state.seeds += 5;
+      pop(s.x, s.y, "+5");
+      updateHud();
+    }
+  });
+
+  enemies.forEach(e => {
+    if (!e.alive) return;
+
+    e.x += e.vx * dt;
+    if (e.x < 10 || e.x + e.w > W - 10) e.vx *= -1;
+
+    if (hit(player, e) && player.invincible <= 0) {
+      hurt(10);
+    }
+
+    babies.forEach(b => {
+      if (dist(b.x, b.y, e.x + 24, e.y + 20) < 35) {
+        e.hp -= 0.01 * dt * state.babies;
+        if (e.hp <= 0) killEnemy(e);
+      }
+    });
+  });
+
+  babies.forEach((b, i) => {
+    b.a += 0.08 * dt;
+    b.x += ((player.x - 35 - i * 18) - b.x) * 0.05;
+    b.y += ((player.y - 45 + Math.sin(b.a) * 12) - b.y) * 0.05;
+  });
+
+  if (boss && boss.alive) {
+    boss.x += boss.vx * dt;
+    if (boss.x < W * 0.45 || boss.x + boss.w > W - 10) boss.vx *= -1;
+
+    if (hit(player, boss) && player.invincible <= 0) {
+      hurt(18);
+    }
+
+    babies.forEach(b => {
+      if (dist(b.x, b.y, boss.x + 45, boss.y + 44) < 50) {
+        boss.hp -= 0.015 * dt * state.babies;
+      }
+    });
+
+    if (boss.hp <= 0) {
+      boss.alive = false;
+      state.bossDefeated = true;
+      state.seeds += 500;
+      save();
+      gameOver(true);
+    }
+  }
+
+  particles.forEach(p => {
+    p.y -= 1.4 * dt;
+    p.life -= dt;
+  });
+  particles = particles.filter(p => p.life > 0);
+
+  const remainingSeeds = seeds.filter(s => !s.got).length;
+  const aliveEnemies = enemies.filter(e => e.alive).length;
+
+  if (remainingSeeds === 0 && aliveEnemies === 0 && (!boss || !boss.alive)) {
+    state.level += 1;
+    state.health = Math.min(state.maxHealth, state.health + 25);
+    save();
+    showMessage("Level up! Welcome to level " + state.level);
+    newLevel();
+  }
+}
+
+function jump() {
+  if (!running || shopOpen) return;
+  if (player.onGround) {
+    player.vy = -13.5;
+    player.onGround = false;
+  }
+}
+
+function attack() {
+  if (!running || shopOpen) return;
+  player.attackTimer = 9;
+
+  const range = {
+    x: player.facing === 1 ? player.x + player.w : player.x - 60,
+    y: player.y + 8,
+    w: 60,
+    h: 42
+  };
+
+  enemies.forEach(e => {
+    if (e.alive && hit(range, e)) {
+      e.hp -= state.sword;
+      pop(e.x + 20, e.y, "HIT!");
+      if (e.hp <= 0) killEnemy(e);
+    }
+  });
+
+  if (boss && boss.alive && hit(range, boss)) {
+    boss.hp -= state.sword;
+    pop(boss.x + 40, boss.y, "BOSS!");
+    if (boss.hp <= 0) {
+      boss.alive = false;
+      state.bossDefeated = true;
+      state.seeds += 500;
+      save();
+      gameOver(true);
+    }
+  }
+}
+
+function killEnemy(e) {
+  e.alive = false;
+  state.seeds += 15;
+  pop(e.x + 20, e.y, "+15");
+  updateHud();
+}
+
+function hurt(amount) {
+  state.health -= amount;
+  player.invincible = 60;
+  pop(player.x + 20, player.y, "-" + amount);
+  updateHud();
+  if (state.health <= 0) {
+    state.health = 0;
+    updateHud();
+    gameOver(false);
+  }
+}
+
+function buy(type) {
+  if (type === "sword") {
+    if (state.seeds < state.swordCost) return showMessage("Need more seeds!");
+    state.seeds -= state.swordCost;
+    state.sword++;
+    state.swordCost = Math.floor(state.swordCost * 1.8);
+    showMessage("Sword upgraded!");
+  }
+
+  if (type === "health") {
+    if (state.seeds < state.healthCost) return showMessage("Need more seeds!");
+    state.seeds -= state.healthCost;
+    state.health = Math.min(state.maxHealth, state.health + 50);
+    showMessage("Health restored!");
+  }
+
+  if (type === "baby") {
+    if (state.seeds < state.babyCost) return showMessage("Need more seeds!");
+    state.seeds -= state.babyCost;
+    state.babies++;
+    state.babyCost = Math.floor(state.babyCost * 1.7);
+    babies.push({x: player.x - 50, y: player.y - 50, a: Math.random() * 10});
+    showMessage("Baby cockatiel hatched!");
+  }
+
+  if (type === "nest") {
+    if (state.seeds < state.nestCost) return showMessage("Need more seeds!");
+    state.seeds -= state.nestCost;
+    state.maxHealth += 20;
+    state.health = state.maxHealth;
+    state.level++;
+    state.nestCost = Math.floor(state.nestCost * 2.2);
+    showMessage("Nest upgraded! Level up!");
+    newLevel();
+  }
+
+  save();
+  updateHud();
+  updateShop();
+}
+
+function toggleShop() {
+  shopOpen = !shopOpen;
+  document.getElementById("shopPanel").style.display = shopOpen ? "block" : "none";
+  updateShop();
+}
+
+function updateShop() {
+  document.getElementById("costSword").textContent = state.swordCost;
+  document.getElementById("costHealth").textContent = state.healthCost;
+  document.getElementById("costBaby").textContent = state.babyCost;
+  document.getElementById("costNest").textContent = state.nestCost;
+}
+
+function updateHud() {
+  document.getElementById("seeds").textContent = Math.floor(state.seeds);
+  document.getElementById("health").textContent = Math.floor(state.health) + "/" + state.maxHealth;
+  document.getElementById("level").textContent = state.level;
+  document.getElementById("babies").textContent = state.babies;
+  document.getElementById("sword").textContent = state.sword;
+  updateShop();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Sky
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, "#163a68");
+  sky.addColorStop(0.62, "#071321");
+  sky.addColorStop(0.63, "#3a2309");
+  sky.addColorStop(1, "#1d1004");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // Sun
+  ctx.fillStyle = "#ffe671";
+  ctx.beginPath();
+  ctx.arc(W - 75, 75, 38, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Stars
+  ctx.fillStyle = "rgba(255,255,255,.45)";
+  for (let i = 0; i < 35; i++) {
+    const x = (i * 97) % W;
+    const y = 30 + ((i * 53) % Math.max(1, groundY - 90));
+    ctx.fillRect(x, y, 2, 2);
+  }
+
+  // Perches
+  drawPerch(80, groundY - 20, W - 160);
+  drawPerch(W * 0.18, groundY - 160, W * 0.27);
+  drawPerch(W * 0.58, groundY - 230, W * 0.25);
+
+  // Seeds
+  seeds.forEach(s => {
+    if (s.got) return;
+    ctx.fillStyle = "#ffe600";
+    ctx.beginPath();
+    ctx.ellipse(s.x, s.y, s.r * 0.75, s.r, 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#8d6b00";
+    ctx.stroke();
+  });
+
+  // Enemies
+  enemies.forEach(e => {
+    if (!e.alive) return;
+    drawSquirrel(e.x, e.y, e.w, e.h);
+  });
+
+  // Boss
+  if (boss && boss.alive) {
+    drawBoss(boss.x, boss.y, boss.w, boss.h);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(boss.x, boss.y - 18, boss.w, 10);
+    ctx.fillStyle = "#ff3333";
+    ctx.fillRect(boss.x, boss.y - 18, boss.w * (boss.hp / boss.maxHp), 10);
+  }
+
+  // Babies
+  babies.forEach(b => drawBaby(b.x, b.y));
+
+  // Player
+  drawCockatiel(player.x, player.y, player.w, player.h, player.facing, player.invincible);
+
+  // Attack swipe
+  if (player.attackTimer > 0) {
+    ctx.strokeStyle = "#00ff7d";
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    const sx = player.facing === 1 ? player.x + 50 : player.x;
+    ctx.arc(sx, player.y + 25, 44, -0.7, 0.7);
+    ctx.stroke();
+  }
+
+  // Particles
+  particles.forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.font = "bold 18px Arial";
+    ctx.fillText(p.text, p.x, p.y);
+  });
+
+  // Shop hut
+  ctx.fillStyle = "#40220a";
+  ctx.fillRect(18, groundY - 88, 82, 88);
+  ctx.fillStyle = "#ffe600";
+  ctx.fillRect(10, groundY - 108, 98, 24);
+  ctx.fillStyle = "black";
+  ctx.font = "bold 14px Arial";
+  ctx.fillText("SHOP", 30, groundY - 91);
+}
+
+function drawPerch(x, y, w) {
+  ctx.fillStyle = "#8b5a2b";
+  ctx.fillRect(x, y, w, 14);
+  ctx.strokeStyle = "#311600";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x, y, w, 14);
+}
+
+function drawCockatiel(x, y, w, h, facing, inv) {
+  ctx.save();
+  if (inv > 0 && Math.floor(inv / 5) % 2 === 0) ctx.globalAlpha = 0.45;
+  ctx.translate(x + w / 2, y + h / 2);
+  ctx.scale(facing, 1);
+
+  // body
+  ctx.fillStyle = "#d7d7d7";
+  ctx.beginPath();
+  ctx.ellipse(0, 8, 25, 29, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // head
+  ctx.fillStyle = "#ffe15c";
+  ctx.beginPath();
+  ctx.arc(6, -18, 20, 0, Math.PI * 2);
+  ctx.fill();
+
+  // crest
+  ctx.fillStyle = "#ffe15c";
+  ctx.beginPath();
+  ctx.moveTo(-4, -34);
+  ctx.lineTo(5, -64);
+  ctx.lineTo(15, -35);
+  ctx.fill();
+
+  // cheek
+  ctx.fillStyle = "#ff8f22";
+  ctx.beginPath();
+  ctx.arc(16, -12, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // eye
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(11, -23, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // beak
+  ctx.fillStyle = "#f49a22";
+  ctx.beginPath();
+  ctx.moveTo(25, -18);
+  ctx.lineTo(42, -12);
+  ctx.lineTo(25, -6);
+  ctx.fill();
+
+  // feet
+  ctx.strokeStyle = "#ffb347";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-8, 34);
+  ctx.lineTo(-14, 43);
+  ctx.moveTo(10, 34);
+  ctx.lineTo(16, 43);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawBaby(x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "#fff08a";
+  ctx.beginPath();
+  ctx.arc(0, 0, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(4, -4, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ff9b22";
+  ctx.beginPath();
+  ctx.moveTo(13, 0);
+  ctx.lineTo(24, 4);
+  ctx.lineTo(13, 8);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSquirrel(x, y, w, h) {
+  ctx.fillStyle = "#8a5a34";
+  ctx.beginPath();
+  ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(x + w - 4, y - 10, 24, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(x + 34, y + 12, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawBoss(x, y, w, h) {
+  ctx.fillStyle = "#573020";
+  ctx.fillRect(x, y + 20, w, h - 20);
+  ctx.fillStyle = "#73412a";
+  ctx.beginPath();
+  ctx.arc(x + w / 2, y + 25, 42, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(x + 35, y + 15, 5, 0, Math.PI * 2);
+  ctx.arc(x + 58, y + 15, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ff3333";
+  ctx.fillRect(x + 25, y + 40, 42, 8);
+}
+
+function hit(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function dist(x1, y1, x2, y2) {
+  return Math.hypot(x1 - x2, y1 - y2);
+}
+
+function pop(x, y, text) {
+  particles.push({x, y, text, life: 55, color: "#00ff7d"});
+}
+
+function showMessage(text) {
+  const m = document.getElementById("message");
+  m.textContent = text;
+  m.style.display = "block";
+  clearTimeout(window.messageTimer);
+  window.messageTimer = setTimeout(() => m.style.display = "none", 1800);
+}
+
+function save() {
+  localStorage.setItem(saveKey, JSON.stringify(state));
+}
+
+function load() {
+  const raw = localStorage.getItem(saveKey);
+  if (!raw) return;
+  try {
+    state = Object.assign(state, JSON.parse(raw));
+  } catch(e) {}
+}
+
+function resetSave() {
+  localStorage.removeItem(saveKey);
+  location.reload();
+}
+
+document.addEventListener("keydown", e => {
+  keys[e.key] = true;
+  if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") jump();
+  if (e.key === "f" || e.key === "F") attack();
+  if (e.key === "s" || e.key === "S") toggleShop();
+});
+
+document.addEventListener("keyup", e => {
+  keys[e.key] = false;
+});
+
+function holdButton(id, down, up) {
+  const el = document.getElementById(id);
+  const start = e => { e.preventDefault(); down(); };
+  const end = e => { e.preventDefault(); up && up(); };
+  el.addEventListener("touchstart", start);
+  el.addEventListener("mousedown", start);
+  el.addEventListener("touchend", end);
+  el.addEventListener("mouseup", end);
+  el.addEventListener("mouseleave", end);
+}
+
+holdButton("leftBtn", () => keys.left = true, () => keys.left = false);
+holdButton("rightBtn", () => keys.right = true, () => keys.right = false);
+holdButton("jumpBtn", jump, () => {});
+holdButton("attackBtn", attack, () => {});
+holdButton("shopBtn", toggleShop, () => {});
+
+updateHud();
+</script>
+</body>
+</html>
