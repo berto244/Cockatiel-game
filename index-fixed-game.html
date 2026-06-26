@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cockatiel Empire Game</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #07111f;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  color: white;
+}
+
+#game {
+  display: block;
+  background: linear-gradient(#1d4d7a, #07111f 65%, #442509 65%);
+}
+
+#hud {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  z-index: 5;
+}
+
+.hudBox {
+  background: rgba(0,0,0,.7);
+  border: 2px solid #ffe600;
+  border-radius: 8px;
+  padding: 7px;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+}
+
+#info {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.75);
+  border: 2px solid #00ff75;
+  color: #00ff75;
+  padding: 8px 12px;
+  border-radius: 8px;
+  z-index: 6;
+  font-weight: bold;
+  text-align: center;
+}
+
+#controls {
+  position: fixed;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 12px;
+  z-index: 10;
+}
+
+.group {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  width: 68px;
+  height: 68px;
+  border-radius: 16px;
+  border: 3px solid white;
+  background: #ffe600;
+  color: #111;
+  font-size: 22px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.btn.green {
+  background: #00ff75;
+}
+
+#shop {
+  position: fixed;
+  right: 10px;
+  top: 115px;
+  width: 310px;
+  max-width: calc(100vw - 20px);
+  background: rgba(0,0,0,.92);
+  border: 3px solid #ffe600;
+  border-radius: 14px;
+  padding: 12px;
+  z-index: 20;
+  display: none;
+}
+
+.shopItem {
+  border: 1px solid #555;
+  border-radius: 10px;
+  padding: 9px;
+  margin: 8px 0;
+}
+
+.shopItem button {
+  width: 100%;
+  padding: 10px;
+  background: #ffe600;
+  border: 0;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+#winLose {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.9);
+  display: none;
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+#winLose .card {
+  background: #111;
+  border: 4px solid #ffe600;
+  border-radius: 18px;
+  padding: 20px;
+  max-width: 480px;
+}
+
+#winLose button {
+  background: #00ff75;
+  border: 0;
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+@media(max-width: 600px) {
+  .hudBox { font-size: 12px; padding: 6px; }
+  .btn { width: 58px; height: 58px; font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="hudBox">Seeds: <span id="seedsText">0</span></div>
+  <div class="hudBox">Health: <span id="healthText">100</span></div>
+  <div class="hudBox">Level: <span id="levelText">1</span></div>
+  <div class="hudBox">Sword: <span id="swordText">1</span></div>
+  <div class="hudBox">Babies: <span id="babiesText">0</span></div>
+  <div class="hudBox">Goal: <span id="goalText">Collect</span></div>
+</div>
+
+<div id="info">Game started! Collect yellow seeds. Hit squirrels. Open shop.</div>
+
+<div id="shop">
+  <h2>🐦 Cockatiel Shop</h2>
+  <div class="shopItem">
+    <b>⚔️ Upgrade Sword</b><br>
+    Cost: <span id="swordCostText">30</span> seeds
+    <button id="buySword">Buy Sword</button>
+  </div>
+  <div class="shopItem">
+    <b>🐣 Hatch Baby Bird</b><br>
+    Cost: <span id="babyCostText">50</span> seeds
+    <button id="buyBaby">Buy Baby</button>
+  </div>
+  <div class="shopItem">
+    <b>❤️ Heal</b><br>
+    Cost: <span id="healCostText">25</span> seeds
+    <button id="buyHeal">Buy Heal</button>
+  </div>
+  <div class="shopItem">
+    <b>🏰 Upgrade Nest</b><br>
+    Cost: <span id="nestCostText">100</span> seeds
+    <button id="buyNest">Buy Nest</button>
+  </div>
+  <button id="closeShop" style="width:100%;padding:10px;">Close</button>
+</div>
+
+<div id="controls">
+  <div class="group">
+    <div class="btn" id="leftBtn">←</div>
+    <div class="btn" id="rightBtn">→</div>
+  </div>
+  <div class="group">
+    <div class="btn green" id="jumpBtn">JUMP</div>
+    <div class="btn green" id="hitBtn">HIT</div>
+    <div class="btn green" id="shopBtn">SHOP</div>
+  </div>
+</div>
+
+<div id="winLose">
+  <div class="card">
+    <h1 id="endTitle">Game Over</h1>
+    <p id="endMsg"></p>
+    <button id="restartBtn">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var canvas = document.getElementById("game");
+  var ctx = canvas.getContext("2d");
+
+  var W, H, ground;
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    ground = Math.floor(H * 0.68);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  var state = {
+    seeds: 0,
+    health: 100,
+    maxHealth: 100,
+    level: 1,
+    sword: 1,
+    babies: 0,
+    swordCost: 30,
+    babyCost: 50,
+    healCost: 25,
+    nestCost: 100
+  };
+
+  var player = {};
+  var seedList = [];
+  var enemies = [];
+  var babyList = [];
+  var particles = [];
+  var keys = {};
+  var shopOpen = false;
+  var gameRunning = true;
+
+  function resetLevel(){
+    player = {
+      x: 80,
+      y: ground - 58,
+      w: 50,
+      h: 58,
+      vx: 0,
+      vy: 0,
+      facing: 1,
+      onGround: true,
+      inv: 0,
+      attack: 0
+    };
+
+    seedList = [];
+    enemies = [];
+    babyList = [];
+    particles = [];
+
+    var seedCount = 12 + state.level * 3;
+    for(var i=0; i<seedCount; i++){
+      seedList.push({
+        x: 130 + Math.random() * Math.max(120, W - 220),
+        y: 120 + Math.random() * Math.max(80, ground - 210),
+        got: false
+      });
+    }
+
+    var enemyCount = 3 + state.level;
+    for(var j=0; j<enemyCount; j++){
+      enemies.push({
+        x: 180 + Math.random() * Math.max(120, W - 260),
+        y: ground - 42,
+        w: 46,
+        h: 42,
+        vx: Math.random() < .5 ? -1.3 : 1.3,
+        hp: 2 + Math.floor(state.level / 2),
+        alive: true,
+        boss: false
+      });
+    }
+
+    if(state.level >= 5){
+      enemies.push({
+        x: W - 130,
+        y: ground - 90,
+        w: 88,
+        h: 90,
+        vx: -0.9,
+        hp: 30,
+        alive: true,
+        boss: true
+      });
+      document.getElementById("goalText").textContent = "Beat Boss";
+      say("Boss level! Beat the big raccoon!");
+    } else {
+      document.getElementById("goalText").textContent = "Collect";
+    }
+
+    for(var b=0; b<state.babies; b++){
+      babyList.push({x: player.x - 40, y: player.y - 40, t: Math.random() * 20});
+    }
+
+    updateHud();
+  }
+
+  function updateHud(){
+    document.getElementById("seedsText").textContent = Math.floor(state.seeds);
+    document.getElementById("healthText").textContent = Math.floor(state.health) + "/" + state.maxHealth;
+    document.getElementById("levelText").textContent = state.level;
+    document.getElementById("swordText").textContent = state.sword;
+    document.getElementById("babiesText").textContent = state.babies;
+    document.getElementById("swordCostText").textContent = state.swordCost;
+    document.getElementById("babyCostText").textContent = state.babyCost;
+    document.getElementById("healCostText").textContent = state.healCost;
+    document.getElementById("nestCostText").textContent = state.nestCost;
+  }
+
+  function say(text){
+    var info = document.getElementById("info");
+    info.textContent = text;
+    info.style.display = "block";
+    clearTimeout(window.sayTimer);
+    window.sayTimer = setTimeout(function(){ info.style.display = "none"; }, 2200);
+  }
+
+  function jump(){
+    if(shopOpen || !gameRunning) return;
+    if(player.onGround){
+      player.vy = -13;
+      player.onGround = false;
+    }
+  }
+
+  function attack(){
+    if(shopOpen || !gameRunning) return;
+    player.attack = 10;
+    var hitbox = {
+      x: player.facing > 0 ? player.x + player.w : player.x - 60,
+      y: player.y + 8,
+      w: 60,
+      h: 45
+    };
+    for(var i=0; i<enemies.length; i++){
+      var e = enemies[i];
+      if(e.alive && overlap(hitbox, e)){
+        e.hp -= state.sword;
+        pop(e.x, e.y, "HIT");
+        if(e.hp <= 0){
+          e.alive = false;
+          state.seeds += e.boss ? 500 : 15;
+          pop(e.x, e.y - 20, e.boss ? "+500" : "+15");
+          if(e.boss){
+            endGame(true);
+          }
+        }
+      }
+    }
+    updateHud();
+  }
+
+  function toggleShop(){
+    shopOpen = !shopOpen;
+    document.getElementById("shop").style.display = shopOpen ? "block" : "none";
+  }
+
+  function buy(type){
+    if(type === "sword"){
+      if(state.seeds < state.swordCost) return say("Need more seeds!");
+      state.seeds -= state.swordCost;
+      state.sword++;
+      state.swordCost = Math.floor(state.swordCost * 1.8);
+      say("Sword upgraded!");
+    }
+    if(type === "baby"){
+      if(state.seeds < state.babyCost) return say("Need more seeds!");
+      state.seeds -= state.babyCost;
+      state.babies++;
+      state.babyCost = Math.floor(state.babyCost * 1.7);
+      babyList.push({x: player.x - 40, y: player.y - 40, t: Math.random() * 20});
+      say("Baby bird hatched!");
+    }
+    if(type === "heal"){
+      if(state.seeds < state.healCost) return say("Need more seeds!");
+      state.seeds -= state.healCost;
+      state.health = Math.min(state.maxHealth, state.health + 50);
+      say("Healed!");
+    }
+    if(type === "nest"){
+      if(state.seeds < state.nestCost) return say("Need more seeds!");
+      state.seeds -= state.nestCost;
+      state.maxHealth += 20;
+      state.health = state.maxHealth;
+      state.level++;
+      state.nestCost = Math.floor(state.nestCost * 2.1);
+      say("Nest upgraded! Level " + state.level);
+      resetLevel();
+    }
+    updateHud();
+  }
+
+  function update(){
+    if(!gameRunning || shopOpen) return;
+
+    var movingLeft = keys.left || keys.ArrowLeft || keys.a || keys.A;
+    var movingRight = keys.right || keys.ArrowRight || keys.d || keys.D;
+
+    player.vx = 0;
+    if(movingLeft){ player.vx = -4.5; player.facing = -1; }
+    if(movingRight){ player.vx = 4.5; player.facing = 1; }
+
+    player.x += player.vx;
+    player.vy += 0.65;
+    player.y += player.vy;
+
+    if(player.y + player.h >= ground){
+      player.y = ground - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    }
+
+    if(player.x < 0) player.x = 0;
+    if(player.x + player.w > W) player.x = W - player.w;
+
+    if(player.inv > 0) player.inv--;
+    if(player.attack > 0) player.attack--;
+
+    for(var i=0; i<seedList.length; i++){
+      var s = seedList[i];
+      if(!s.got && distance(player.x+25, player.y+25, s.x, s.y) < 38){
+        s.got = true;
+        state.seeds += 5;
+        pop(s.x, s.y, "+5");
+        updateHud();
+      }
+    }
+
+    for(var j=0; j<enemies.length; j++){
+      var e = enemies[j];
+      if(!e.alive) continue;
+      e.x += e.vx;
+      if(e.x < 5 || e.x + e.w > W - 5) e.vx *= -1;
+
+      if(overlap(player, e) && player.inv <= 0){
+        state.health -= e.boss ? 25 : 10;
+        player.inv = 70;
+        pop(player.x, player.y, e.boss ? "-25" : "-10");
+        if(state.health <= 0){
+          state.health = 0;
+          updateHud();
+          endGame(false);
+        }
+        updateHud();
+      }
+    }
+
+    for(var b=0; b<babyList.length; b++){
+      var bb = babyList[b];
+      bb.t += .08;
+      bb.x += ((player.x - 35 - b * 18) - bb.x) * .08;
+      bb.y += ((player.y - 35 + Math.sin(bb.t) * 12) - bb.y) * .08;
+
+      for(var k=0; k<enemies.length; k++){
+        var en = enemies[k];
+        if(en.alive && distance(bb.x, bb.y, en.x + en.w/2, en.y + en.h/2) < 42){
+          en.hp -= 0.018;
+          if(en.hp <= 0){
+            en.alive = false;
+            state.seeds += en.boss ? 500 : 15;
+            if(en.boss) endGame(true);
+            updateHud();
+          }
+        }
+      }
+    }
+
+    for(var p=particles.length-1; p>=0; p--){
+      particles[p].y -= 1.5;
+      particles[p].life--;
+      if(particles[p].life <= 0) particles.splice(p,1);
+    }
+
+    var allSeedsGone = seedList.every(function(s){ return s.got; });
+    var enemiesDead = enemies.every(function(e){ return !e.alive; });
+
+    if(allSeedsGone && enemiesDead && gameRunning){
+      state.level++;
+      state.health = Math.min(state.maxHealth, state.health + 20);
+      say("Level " + state.level + "!");
+      resetLevel();
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    var sky = ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,"#1d4d7a");
+    sky.addColorStop(.65,"#07111f");
+    sky.addColorStop(.66,"#442509");
+    sky.addColorStop(1,"#221103");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = "#ffe66b";
+    ctx.beginPath();
+    ctx.arc(W-70,70,35,0,Math.PI*2);
+    ctx.fill();
+
+    drawPerch(70, ground - 18, W - 140);
+    drawPerch(W*.18, ground - 150, W*.28);
+    drawPerch(W*.57, ground - 220, W*.28);
+
+    ctx.fillStyle = "#ffe600";
+    for(var i=0; i<seedList.length; i++){
+      var s = seedList[i];
+      if(s.got) continue;
+      ctx.beginPath();
+      ctx.ellipse(s.x, s.y, 8, 12, .5, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    for(var j=0; j<enemies.length; j++){
+      var e = enemies[j];
+      if(!e.alive) continue;
+      if(e.boss) drawBoss(e);
+      else drawSquirrel(e);
+    }
+
+    for(var b=0; b<babyList.length; b++){
+      drawBaby(babyList[b].x, babyList[b].y);
+    }
+
+    drawBird(player);
+
+    if(player.attack > 0){
+      ctx.strokeStyle = "#00ff75";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      var ax = player.facing > 0 ? player.x + 55 : player.x;
+      ctx.arc(ax, player.y + 28, 48, -.7, .7);
+      ctx.stroke();
+    }
+
+    for(var p=0; p<particles.length; p++){
+      ctx.fillStyle = "#00ff75";
+      ctx.font = "bold 18px Arial";
+      ctx.fillText(particles[p].text, particles[p].x, particles[p].y);
+    }
+
+    ctx.fillStyle = "#4d2a10";
+    ctx.fillRect(12, ground - 82, 85, 82);
+    ctx.fillStyle = "#ffe600";
+    ctx.fillRect(8, ground - 105, 95, 25);
+    ctx.fillStyle = "black";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText("SHOP", 30, ground - 88);
+  }
+
+  function drawPerch(x,y,w){
+    ctx.fillStyle = "#9b662d";
+    ctx.fillRect(x,y,w,14);
+    ctx.strokeStyle = "#2d1704";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x,y,w,14);
+  }
+
+  function drawBird(p){
+    ctx.save();
+    if(p.inv > 0 && Math.floor(p.inv/5)%2===0) ctx.globalAlpha = .45;
+    ctx.translate(p.x + p.w/2, p.y + p.h/2);
+    ctx.scale(p.facing, 1);
+
+    ctx.fillStyle = "#d8d8d8";
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 25, 30, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffe15b";
+    ctx.beginPath();
+    ctx.arc(8, -18, 20, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(-4,-35);
+    ctx.lineTo(8,-67);
+    ctx.lineTo(18,-35);
+    ctx.fill();
+
+    ctx.fillStyle = "#ff8c22";
+    ctx.beginPath();
+    ctx.arc(18,-11,7,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(12,-23,3,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ff9b22";
+    ctx.beginPath();
+    ctx.moveTo(26,-17);
+    ctx.lineTo(44,-10);
+    ctx.lineTo(26,-5);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawBaby(x,y){
+    ctx.fillStyle = "#fff18a";
+    ctx.beginPath();
+    ctx.arc(x,y,14,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(x+4,y-4,2,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawSquirrel(e){
+    ctx.fillStyle = "#8a5a34";
+    ctx.beginPath();
+    ctx.ellipse(e.x+23,e.y+21,23,21,0,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(e.x+42,e.y-5,22,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(e.x+31,e.y+14,3,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawBoss(e){
+    ctx.fillStyle = "#5b3222";
+    ctx.fillRect(e.x,e.y+20,e.w,e.h-20);
+    ctx.fillStyle = "#74412b";
+    ctx.beginPath();
+    ctx.arc(e.x+44,e.y+25,42,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(e.x+32,e.y+14,5,0,Math.PI*2);
+    ctx.arc(e.x+58,e.y+14,5,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ff3333";
+    ctx.fillRect(e.x, e.y-14, e.w * Math.max(0,e.hp/30), 8);
+  }
+
+  function pop(x,y,text){
+    particles.push({x:x,y:y,text:text,life:45});
+  }
+
+  function overlap(a,b){
+    return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+  }
+
+  function distance(x1,y1,x2,y2){
+    var dx=x1-x2, dy=y1-y2;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  function endGame(win){
+    gameRunning = false;
+    document.getElementById("winLose").style.display = "flex";
+    document.getElementById("endTitle").textContent = win ? "YOU WON! 🏆" : "GAME OVER";
+    document.getElementById("endMsg").textContent = win ? "You built the Cockatiel Empire and beat the boss!" : "Your cockatiel got knocked out.";
+  }
+
+  document.addEventListener("keydown", function(e){
+    keys[e.key] = true;
+    if(e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") jump();
+    if(e.key === "f" || e.key === "F") attack();
+    if(e.key === "s" || e.key === "S") toggleShop();
+  });
+
+  document.addEventListener("keyup", function(e){
+    keys[e.key] = false;
+  });
+
+  function press(id, down, up){
+    var el = document.getElementById(id);
+    function start(e){ e.preventDefault(); down(); }
+    function end(e){ e.preventDefault(); if(up) up(); }
+    el.addEventListener("touchstart", start, {passive:false});
+    el.addEventListener("touchend", end, {passive:false});
+    el.addEventListener("mousedown", start);
+    el.addEventListener("mouseup", end);
+    el.addEventListener("mouseleave", end);
+  }
+
+  press("leftBtn", function(){ keys.left = true; }, function(){ keys.left = false; });
+  press("rightBtn", function(){ keys.right = true; }, function(){ keys.right = false; });
+  press("jumpBtn", jump, function(){});
+  press("hitBtn", attack, function(){});
+  press("shopBtn", toggleShop, function(){});
+
+  document.getElementById("buySword").addEventListener("click", function(){ buy("sword"); });
+  document.getElementById("buyBaby").addEventListener("click", function(){ buy("baby"); });
+  document.getElementById("buyHeal").addEventListener("click", function(){ buy("heal"); });
+  document.getElementById("buyNest").addEventListener("click", function(){ buy("nest"); });
+  document.getElementById("closeShop").addEventListener("click", toggleShop);
+  document.getElementById("restartBtn").addEventListener("click", function(){ location.reload(); });
+
+  resetLevel();
+
+  function gameLoop(){
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+  gameLoop();
+
+})();
+</script>
+
+</body>
+</html>
