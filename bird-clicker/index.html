@@ -1,29 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cockatiel Empire</title>
-    <style>
-        body { font-family: Arial; text-align: center; background: #111; color: #ff0; }
-        #game { max-width: 600px; margin: 0 auto; }
-        #bird { width: 200px; height: 200px; cursor: pointer; }
-        .upgrade { margin: 10px; padding: 10px; background: #222; border: 2px solid #ff0; cursor: pointer; }
-    </style>
+<title>Cockatiel Clicker</title>
+<style>body{text-align:center;background:#000;color:#0f0;font-family:sans-serif;}#bird{width:200px;height:200px;cursor:pointer;}</style>
 </head>
 <body>
-    <h1>🐦 Cockatiel Empire</h1>
-    <div id="game">
-        <div>Seeds: <span id="seeds">0</span> | Level: <span id="level">1</span></div>
-        <img id="bird" src="https://picsum.photos/id/1015/200/200" alt="bird">
-        <div id="message"></div>
-        <h2>Upgrades</h2>
-        <div class="upgrade" id="upgrade1">Better Perch (50)</div>
-        <div class="upgrade" id="upgrade2">Toy Swarm (250)</div>
-        <div class="upgrade" id="upgrade3">Lightning Nest (1200)</div>
-        <div class="upgrade" id="upgrade4">Royal Crown (5000)</div>
-        <div class="upgrade" onclick="buyPremium()">💎 Premium $4.99</div>
-    </div>
-    <script src="game.js"></script>
+<h1>🐦 Click the Bird!</h1>
+<div>Seeds: <span id="s">0</span></div>
+<img id="bird" src="https://picsum.photos/id/1015/200/200">
+<div id="msg"></div>
+<script src="game.js"></script>
 </body>
 </html>
